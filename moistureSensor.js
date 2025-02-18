@@ -30,7 +30,7 @@ const s3 = new AWS.S3({
 // Subscribe to MQTT topic
 client.on('connect', () => {
     console.log('Connected to MQTT Broker');
-    client.subscribe('sensor/moisture/#');
+    client.subscribe('sensor/moisture/levels');
 });
 
 client.on('message', (topic, message) => {
