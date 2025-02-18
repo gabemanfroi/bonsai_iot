@@ -1,0 +1,19 @@
+{
+  "name": "moisturesensor",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "dotenv": "^16.4.7",
+    "mqtt": "^5.10.3",
+    "sqlite3": "^5.1.7",
+    "ws": "^8.18.0"
+  }
+}
