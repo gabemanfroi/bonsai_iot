@@ -2,6 +2,7 @@ const mqtt = require('mqtt');
 const sqlite3 = require('sqlite3').verbose();
 const WebSocket = require('ws');
 const AWS = require('aws-sdk');
+const axios = require('axios');
 require('dotenv').config();
 
 // Connect to MQTT Broker on Raspberry Pi
@@ -27,6 +28,28 @@ const s3 = new AWS.S3({
     region: process.env.AWS_REGION
 });
 
+// Telegram Configuration
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const GABRIEL_CHAT_ID = process.env.GABRIEL_TELEGRAM_CHAT_ID;
+const AMANDA_CHAT_ID = process.env.AMANDA_CHAT_ID;
+const MOISTURE_THRESHOLD = 25;
+let lastAlertTime = 0;
+const ALERT_INTERVAL = 5 * 60 * 1000;
+
+// Function to send Telegram messages
+const sendTelegramMessage = async (message, chatId) => {
+    try {
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        await axios.post(url, {
+            chat_id: chatId,
+            text: message
+        });
+        console.log(`✅ Telegram alert sent to ${chatId}: ${message}`);
+    } catch (error) {
+        console.error("❌ Error sending Telegram message:", error.message);
+    }
+};
+
 // Subscribe to MQTT topic
 client.on('connect', () => {
     console.log('Connected to MQTT Broker');
@@ -47,6 +70,17 @@ client.on('message', (topic, message) => {
             client.send(JSON.stringify(data));
         }
     });
+
+    // Check if moisture level is below the threshold and send an alert
+    const currentTime = Date.now();
+    if (data.moisture_level < MOISTURE_THRESHOLD && currentTime - lastAlertTime > ALERT_INTERVAL) {
+        const alertMessage = `🚨 ALERT: Soil moisture is too low! (${data.moisture_level}%)`;
+
+        sendTelegramMessage(alertMessage, GABRIEL_CHAT_ID);
+        sendTelegramMessage(alertMessage, AMANDA_CHAT_ID);
+
+        lastAlertTime = currentTime; // Update last alert time
+    }
 });
 
 // Function to upload data to S3 every hour
