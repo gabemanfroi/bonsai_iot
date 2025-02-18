@@ -11,6 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.1692.0",
+    "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "mqtt": "^5.10.3",
     "sqlite3": "^5.1.7",
