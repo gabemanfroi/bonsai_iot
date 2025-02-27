@@ -104,4 +104,7 @@ setInterval(() => {
             db.run("DELETE FROM moisture_data");
         });
     });
-}, 3600000); // Every 1 hour
+}, 30000); // Every 1 hour
+
+console.log(process.env
+)
