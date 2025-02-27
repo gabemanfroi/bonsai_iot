@@ -4,6 +4,7 @@ const WebSocket = require('ws');
 const AWS = require('aws-sdk');
 const axios = require('axios');
 require('dotenv').config();
+const https = require('https');
 
 // Connect to MQTT Broker on Raspberry Pi
 const client = mqtt.connect('mqtt://localhost');
@@ -30,7 +31,7 @@ const s3 = new AWS.S3({
 
 // Telegram Configuration
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const GABRIEL_CHAT_ID = process.env.GABRIEL_TELEGRAM_CHAT_ID;
+const GABRIEL_CHAT_ID = process.env.GABRIEL_CHAT_ID;
 const AMANDA_CHAT_ID = process.env.AMANDA_CHAT_ID;
 const MOISTURE_THRESHOLD = 25;
 let lastAlertTime = 0;
@@ -38,12 +39,16 @@ const ALERT_INTERVAL = 5 * 60 * 1000;
 
 // Function to send Telegram messages
 const sendTelegramMessage = async (message, chatId) => {
+    console.log({chatId})
     try {
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         await axios.post(url, {
             chat_id: chatId,
             text: message
+        }, {
+            httpsAgent: new https.Agent({ rejectUnauthorized: false }) // Disables SSL verification
         });
+
         console.log(`✅ Telegram alert sent to ${chatId}: ${message}`);
     } catch (error) {
         console.error("❌ Error sending Telegram message:", error.message);
@@ -104,4 +109,5 @@ setInterval(() => {
             db.run("DELETE FROM moisture_data");
         });
     });
-}, 3600000); // Every 1 hour
+}, 3600000); // Every 1// hou
+
