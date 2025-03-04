@@ -110,5 +110,3 @@ setInterval(() => {
         });
     });
 }, 3600000); // Every 1// hou
-
-console.log('here')
