@@ -34,12 +34,14 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const GABRIEL_CHAT_ID = process.env.GABRIEL_CHAT_ID;
 const AMANDA_CHAT_ID = process.env.AMANDA_CHAT_ID;
 const MOISTURE_THRESHOLD = 25;
-let lastAlertTime = 0;
-const ALERT_INTERVAL = 5 * 60 * 1000;
+const ALERT_DELAY = 5 * 60 * 1000; // 5 minutes delay before sending an alert
+
+// Store first low moisture reading timestamps
+let moistureBelowThresholdSince = {}; // { sensor_id: timestamp }
 
 // Function to send Telegram messages
 const sendTelegramMessage = async (message, chatId) => {
-    console.log({chatId})
+    console.log({ chatId });
     try {
         const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
         await axios.post(url, {
@@ -76,15 +78,30 @@ client.on('message', (topic, message) => {
         }
     });
 
-    // Check if moisture level is below the threshold and send an alert
     const currentTime = Date.now();
-    if (data.moisture_level < MOISTURE_THRESHOLD && currentTime - lastAlertTime > ALERT_INTERVAL) {
-        const alertMessage = `🚨 ALERT: Soil moisture for sensor ${data.sensor_id} is too low! (${data.moisture_level}%)`;
 
-        sendTelegramMessage(alertMessage, GABRIEL_CHAT_ID);
-        sendTelegramMessage(alertMessage, AMANDA_CHAT_ID);
+    if (data.moisture_level < MOISTURE_THRESHOLD) {
+        // If the sensor is under the threshold and wasn't already, mark the first low reading time
+        if (!moistureBelowThresholdSince[data.sensor_id]) {
+            moistureBelowThresholdSince[data.sensor_id] = currentTime;
+        }
 
-        lastAlertTime = currentTime; // Update last alert time
+        // Check if the moisture level has stayed low for more than the alert delay
+        if (currentTime - moistureBelowThresholdSince[data.sensor_id] >= ALERT_DELAY) {
+            const alertMessage = `🚨 ALERT: Soil moisture for sensor ${data.sensor_id} is too low! (${data.moisture_level}%)`;
+
+            sendTelegramMessage(alertMessage, GABRIEL_CHAT_ID);
+            sendTelegramMessage(alertMessage, AMANDA_CHAT_ID);
+
+            // Reset the alert timer to prevent spamming until the moisture level rises again
+            moistureBelowThresholdSince[data.sensor_id] = null;
+        }
+    } else {
+        // If moisture level is back to normal, reset the low reading timestamp
+        if (moistureBelowThresholdSince[data.sensor_id]) {
+            console.log(`✅ Moisture for sensor ${data.sensor_id} is back to normal.`);
+        }
+        moistureBelowThresholdSince[data.sensor_id] = null;
     }
 });
 
@@ -109,4 +126,4 @@ setInterval(() => {
             db.run("DELETE FROM moisture_data");
         });
     });
-}, 3600000); // Every 1// hou
+}, 3600000); // Every 1 hour
