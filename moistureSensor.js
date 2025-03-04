@@ -79,7 +79,7 @@ client.on('message', (topic, message) => {
     // Check if moisture level is below the threshold and send an alert
     const currentTime = Date.now();
     if (data.moisture_level < MOISTURE_THRESHOLD && currentTime - lastAlertTime > ALERT_INTERVAL) {
-        const alertMessage = `🚨 ALERT: Soil moisture is too low! (${data.moisture_level}%)`;
+        const alertMessage = `🚨 ALERT: Soil moisture for sensor ${data.sensor_id} is too low! (${data.moisture_level}%)`;
 
         sendTelegramMessage(alertMessage, GABRIEL_CHAT_ID);
         sendTelegramMessage(alertMessage, AMANDA_CHAT_ID);
@@ -111,3 +111,4 @@ setInterval(() => {
     });
 }, 3600000); // Every 1// hou
 
+sendTelegramMessage('test', GABRIEL_CHAT_ID)
