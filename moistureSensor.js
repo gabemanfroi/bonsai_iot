@@ -111,4 +111,4 @@ setInterval(() => {
     });
 }, 3600000); // Every 1// hou
 
-sendTelegramMessage('test', GABRIEL_CHAT_ID)
+console.log('here')
